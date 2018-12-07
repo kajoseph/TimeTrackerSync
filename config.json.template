@@ -1,0 +1,33 @@
+{ 
+    "targetProcess": {
+        "baseUrl": "base URL for account",
+        "userName": "user email address",
+        "password": "user password",
+        "userId": 0
+    },
+    "harvest": {
+        "baseUrl": "base URL for account",
+        "userName": "user email address",
+        "password": "user password",
+        "userId": 0,
+        "completedTaskId": 1000000
+    },
+    "jira": {
+        "baseUrl": "base url for jira account",
+        "userId": "login user name",
+        "apiToken": "API token provided from jira",
+        "userName": "user name",
+        "email": "user email address",
+        "password": "user password"
+    },
+    "tempo": {
+        "baseUrl": "base url for tempo account",
+        "apiToken": "API token for Tempo access"
+    },
+    "toggl": {
+        "baseUrl": "toggle.com",
+        "path": "/api/v8/time_entries"
+        "userName": "user email address",
+        "password": "user password"
+    }
+}

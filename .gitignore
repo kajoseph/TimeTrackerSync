@@ -1,0 +1,11 @@
+# Node Packages
+node_modules/*
+
+# Mac System Files
+.DS_Store
+
+# Configuration
+config.json
+
+.vscode
+package-lock.json
