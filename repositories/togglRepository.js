@@ -6,6 +6,7 @@ module.exports = (config) => {
     var repo = {};
 
     repo.GetTimeEntries = (startTime, endTime, callback) => {
+        var self = this;
         let options = {
             "hostname": config.baseUrl,
             "path": config.path + `?start_time=${startTime}&end_time=${endTime}`,
@@ -24,19 +25,24 @@ module.exports = (config) => {
                 var time_entries = JSON.parse((Buffer.concat(chunks)).toString());
                 
                 // Get all clients
-                this.GetClients((clients) => {
+                repo.GetClients((clients) => {
                     // Get client id of Merg3d
-                    let merg3d = clients.filter(f => f.name = "Merg3d");
+                    let merg3d = clients.find(f => { return f.name == "Merg3d"})[0];
                     
+                    if(merg3d){
                     // Get projects under Merg3d client
-                    this.GetClientProjects(merg3d, (projects) => {
-                        
-                        // Filter out those Merg3d projects' time entries 
-                        time_entries = time_entries.filter(t => { return projects.map(p => p.id).indexOf(t.pid) == -1 })
+                        repo.GetClientProjects(merg3d.id, (projects) => {
+                            
+                            // Filter out those Merg3d projects' time entries 
+                            time_entries = time_entries.filter(t => { return projects.map(p => p.id).indexOf(t.pid) == -1 })
 
-                        // callback = enter the time entries (Devnext only) into JIRA.
+                            // callback = enter the time entries (Devnext only) into JIRA.
+                            callback(time_entries)
+                        })
+                    }
+                    else{
                         callback(time_entries)
-                    })
+                    }
                 })
             });
 
@@ -87,7 +93,7 @@ module.exports = (config) => {
         }
 
         let chunks = [];
-        https.request(options, res => {
+        var req = https.request(options, res => {
             res.on("data", chunk => {
                 chunks.push(chunk);
             })
@@ -101,6 +107,8 @@ module.exports = (config) => {
                 console.log("ERROR getting Clients from Toggl: " + msg);
             })
         })
+
+        req.end();
     }
 
     repo.GetClientProjects = (clientId, callback) => {
@@ -112,7 +120,7 @@ module.exports = (config) => {
         }
 
         let chunks = [];
-        https.request(options, res => {
+        var req = https.request(options, res => {
             res.on("data", chunk => {
                 chunks.push(chunk);
             })
@@ -127,6 +135,8 @@ module.exports = (config) => {
                 console.log("ERROR getting Projects for Client " + clientId.toString() + " from Toggl: " + msg);
             })
         })
+
+        req.end();
     }
 
     return repo;
