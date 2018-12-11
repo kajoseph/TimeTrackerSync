@@ -18,7 +18,8 @@
         "apiToken": "API token provided from jira",
         "userName": "user name",
         "email": "user email address",
-        "password": "user password"
+        "password": "user password",
+        "testmode": true
     },
     "tempo": {
         "baseUrl": "base url for tempo account",
@@ -26,7 +27,7 @@
     },
     "toggl": {
         "baseUrl": "toggle.com",
-        "path": "/api/v8/time_entries"
+        "path": "/api/v8/time_entries",
         "userName": "user email address",
         "password": "user password"
     }
