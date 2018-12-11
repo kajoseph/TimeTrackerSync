@@ -27,7 +27,7 @@ module.exports = (config) => {
                 // Get all clients
                 repo.GetClients((clients) => {
                     // Get client id of Merg3d
-                    let merg3d = clients.find(f => { return f.name == "Merg3d"})[0];
+                    let merg3d = clients ? clients.find(f => { return f.name == "Merg3d"})[0] : null;
                     
                     if(merg3d){
                     // Get projects under Merg3d client
