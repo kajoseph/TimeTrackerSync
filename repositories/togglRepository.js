@@ -9,7 +9,7 @@ module.exports = (config) => {
         var self = this;
         let options = {
             "hostname": config.baseUrl,
-            "path": config.path + `?start_time=${startTime}&end_time=${endTime}`,
+            "path": config.path + `?start_date=${encodeURIComponent(startTime)}&end_date=${encodeURIComponent(endTime)}`,
             "method": "GET",
             "auth": `${config.userName}:${config.password}`
         };
