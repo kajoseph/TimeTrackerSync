@@ -14,7 +14,7 @@ var TARGETPROCESS_USER_ID = config.targetProcess.userId,
 var fromDate = new Date();
 var toDate = new Date(); 
 fromDate.setDate(fromDate.getDate() - 7);		// Sets fromDate to one week prior
-toDate.setDate(toDate.getDate() - 1);			// Sets toDate to one day prior
+//toDate.setDate(toDate.getDate() - 1);			// Sets toDate to one day prior
 
 var fromString = dateFormat(fromDate, "yyyymmdd"),
 	toString = dateFormat(toDate, "yyyymmdd");
