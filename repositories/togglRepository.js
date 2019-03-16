@@ -27,7 +27,7 @@ module.exports = (config) => {
                 // Get all clients
                 repo.GetClients((clients) => {
                     // Get client id of Merg3d
-                    let merg3d = clients ? clients.find(f => { return f.name == "Merg3d"})[0] : null;
+                    let merg3d = clients ? clients.find(f => { return f.name == "Merg3d"}) : null;
                     
                     if(merg3d){
                     // Get projects under Merg3d client
@@ -36,6 +36,9 @@ module.exports = (config) => {
                             // Filter out those Merg3d projects' time entries 
                             time_entries = time_entries.filter(t => { return projects.map(p => p.id).indexOf(t.pid) == -1 })
 
+                            // Filter out previously recorded time entries and blank descriptions and duration is greater than 0 (i.e. not currently running time)
+                            time_entries = time_entries.filter(f => { return (!f.tags || f.tags.indexOf("JIRA")) && f.description && f.duration > 0})
+                            
                             // callback = enter the time entries (Devnext only) into JIRA.
                             callback(time_entries)
                         })
@@ -72,6 +75,7 @@ module.exports = (config) => {
             res.on("end", () => {
                 var body = Buffer.concat(chunks);
                 var json = JSON.parse(body.toString())
+                json.data = Array.isArray(json.data) ? json.data[0] : json.data;
                 console.log("ADDED: " + json.data.description + "; Tags: " + json.data.tags.join(','))
             })
 
@@ -80,7 +84,7 @@ module.exports = (config) => {
             })
         })
 
-        req.write(`{"time_entry":{"tags":["JIRA"]}}`)
+        req.write(`{"time_entry":{"tags":["JIRA"], "tag_action": "add"}}`)
         req.end();
     }
 
@@ -137,6 +141,42 @@ module.exports = (config) => {
         })
 
         req.end();
+    }
+
+    /**
+     * Prevents multiple time entries per day being entered into JIRA due to Toggl
+     * creating new time entry records every time the timer starts.
+     * @param data Time entry data from Toggl
+     * @returns {array} Array of objects, each object includes a "raw" property which is an array of uncompressed objects
+     */
+    repo.CompressTimeEntriesToDay = (data) => {
+       
+        // Compress the data into one entry per day per US.
+        // res is return object from reduce loop
+        // value is the i-th object in array loop
+        return data.reduce((res,value) => {
+            // Check if res already has object that has record for US and day
+            var r = res.find(f => f.storyId == value.description.split(" ")[0].trim() && f.start == (new Date(value.start)).toDateString() );
+            if(r){
+                var i = res.indexOf(r);
+                res[i].duration += value.duration;
+                res[i].id += "," + value.id.toString();
+                res[i].jiraDescription.push(value.description);
+                res[i].raw.push(value);
+            }
+            else {
+                res.push({
+                    storyId: value.description.split(" ")[0].trim(),
+                    description: value.description + "(" + (new Date(value.start)).toDateString() + ")",
+                    jiraDescription: [value.description], // This will be stringified for logging into JIRA. Just in case there's a mis-named time log that gets included.
+                    start: (new Date(value.start)).toDateString(),
+                    duration: value.duration,
+                    id: value.id.toString(), // Toggl allows bulk tag updates via comma separated ids.
+                    raw: [value]
+                });
+            };
+            return res; //Returns res to next iteration of loop. Gets compounded in reduce loop.
+        },[])
     }
 
     return repo;

@@ -257,13 +257,13 @@ module.exports = function(config, tempoConfig){
         else if (dayEntry.description){
             var timeEntry = {};
 
-            timeEntry.id = dayEntry.description.split(' ')[0].trim(); // JIRA id (e.g. STOREPRO-73)
-            timeEntry.userId = userId;                                // UserId passed in
-            timeEntry.entryDate = new Date(dayEntry.start);           // Date the time was logged
-            timeEntry.spent = dayEntry.duration;                      // Time duration in seconds
-            timeEntry.remain = 0;                                     // This will be calculated at log time
-            timeEntry.notes = dayEntry.description;                   // e.g. "DSS-173 Implement Changes to Reports"
-            timeEntry.sourceId = dayEntry.id                          // Id of Toggl entry
+            timeEntry.id = dayEntry.storyId; // JIRA id (e.g. STOREPRO-73)
+            timeEntry.userId = userId;                                 // UserId passed in
+            timeEntry.entryDate = new Date(dayEntry.start);            // Date the time was logged
+            timeEntry.spent = dayEntry.duration;                       // Time duration in seconds
+            timeEntry.remain = 0;                                      // This will be calculated at log time
+            timeEntry.notes = dayEntry.description + " -- " + JSON.stringify(dayEntry.jiraDescription);// e.g. ["DSS-173 Implement Changes to Reports"]
+            timeEntry.sourceId = dayEntry.id                           // Id of Toggl entry
         }
 
         return timeEntry;

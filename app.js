@@ -13,7 +13,7 @@ var TARGETPROCESS_USER_ID = config.targetProcess.userId,
 
 var fromDate = new Date();
 var toDate = new Date(); 
-fromDate.setDate(fromDate.getDate() - 7);		// Sets fromDate to one week prior
+fromDate.setDate(fromDate.getDate() - 14);		// Sets fromDate to one week prior
 //toDate.setDate(toDate.getDate() - 1);			// Sets toDate to one day prior
 
 var fromString = dateFormat(fromDate, "yyyymmdd"),
@@ -92,7 +92,7 @@ var updateJiraTime = function(dayEntry) {
 		jira.postTimeEntry(entity.key, timeEntry.userId, timeEntry.notes, timeEntry.entryDate, timeEntry.spent, remaining, entity.accountKey,
 			function(data, response) 
 			{
-				logTimeEntry(dayEntry.id, data.summary, data.newNote);
+				logTimeEntry(dayEntry, data.summary, data.newNote);
 			}, function(data, response) {
 				console.log('Error updating time for ' + timeEntry.notes + ':  ' + response.statusCode + ' ' + response.statusMessage +
 				(data == null ? '(No details provided)' : ' (' + data.Message + ')'));
@@ -147,17 +147,20 @@ timeProcessors.push(updateJiraTime);
 // }
 //endregion
 
-var logTimeEntry = function(sourceId, summary, note) {
+var logTimeEntry = function(source, summary, note) {
 	console.log(summary);
 
-	// Upon success, move the time entry to a completed task
-	/*
-	harvest.completeTimeEntry(sourceId, COMPLETED_TASK_ID, note, 
-		function(data, response) { console.log('Completed ' + note);	}
-	);
-	*/
-
-	toggl.MarkJira(sourceId);
+	// Toggl source object has a raw property
+	if(source.raw)
+		toggl.MarkJira(source.id); // Toggl allows bulk update call via comma separated ids.
+	// Harvest doesn't have a raw field
+	else {
+		// Upon success, move the time entry to a completed task
+		
+		harvest.completeTimeEntry(source.id, COMPLETED_TASK_ID, note, 
+			function(data, response) { console.log('Completed ' + note);	}
+		);
+	}
 }
 
 var abc = (res) => {
@@ -169,8 +172,12 @@ jira.getTimeAccounts(function(data, response) {
 			timeAccounts = data.accounts;
 
 			toggl.GetTimeEntries(fromIsoString, toIsoString, (data) => {
+				
+				// Compress time entries to prevent multiple time entries per day on a US
+				var compressed = toggl.CompressTimeEntriesToDay(data);
+
 				//Iterate through each time entry
-				data.forEach((d,i) => {
+				compressed.forEach((d,i) => {
 					// If the description is ready to be imported (i.e. not blank) and does not have the JIRA tag
 					if(d.description && d.description.split(' ')[0].indexOf('-') > -1 && (!d.tags || d.tags.indexOf("JIRA") < 0)){
 						//Iterate through each time processor (JIRA, TargetProcess, etc.)
