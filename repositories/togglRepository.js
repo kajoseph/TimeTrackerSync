@@ -23,7 +23,10 @@ module.exports = (config) => {
 
             res.on("end", function () {
                 var time_entries = JSON.parse((Buffer.concat(chunks)).toString());
-                
+
+                // Filter out previously recorded time entries and blank descriptions and duration is greater than 0 (i.e. not currently running time)
+                time_entries = time_entries.filter(f => { return (!f.tags || f.tags.indexOf("JIRA")) && f.description && f.duration > 0})
+
                 // Get all clients
                 repo.GetClients((clients) => {
                     // Get client id of Merg3d
@@ -35,9 +38,6 @@ module.exports = (config) => {
                             
                             // Filter out those Merg3d projects' time entries 
                             time_entries = time_entries.filter(t => { return projects.map(p => p.id).indexOf(t.pid) == -1 })
-
-                            // Filter out previously recorded time entries and blank descriptions and duration is greater than 0 (i.e. not currently running time)
-                            time_entries = time_entries.filter(f => { return (!f.tags || f.tags.indexOf("JIRA")) && f.description && f.duration > 0})
                             
                             // callback = enter the time entries (Devnext only) into JIRA.
                             callback(time_entries)
