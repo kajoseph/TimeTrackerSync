@@ -5,7 +5,8 @@ var _jiraclient = null,
     _baseurl = null,
     _tempourl = null,
     _tempoauth = null,
-    _jirauser = null;
+    _jirauser = null,
+    _jiraAccountId = null;
 
 var client = require('node-rest-client').Client,
 	constants = require('constants');
@@ -14,7 +15,7 @@ module.exports = function(config, tempoConfig){
     var repo = {};
     
     _baseurl = "https://" + (config.baseUrl || process.env.JIRA_BASEURL) + "/rest/";
-    _tempourl = "https://" + (tempoConfig.baseUrl || process.env.TEMPO_BASEURL) + "/2/";
+    _tempourl = "https://" + (tempoConfig.baseUrl || process.env.TEMPO_BASEURL) + "/core/3/";
     _tempoauth = "Bearer " + (tempoConfig.apiToken || process.env.TEMPO_APITOKEN);
     _jirauser = (config.userName || process.env.JIRA_USERNAME);
 
@@ -91,6 +92,8 @@ module.exports = function(config, tempoConfig){
 
                     data.isComplete = true;
                     data.accounts = accountLookup;
+                    
+                    repo.GetUserAccountId();
 
                     if (onSuccess != null)
                         onSuccess(data, response)
@@ -162,7 +165,8 @@ module.exports = function(config, tempoConfig){
                 "Authorization": _tempoauth
             },
             data: {
-                authorUsername: _jirauser,
+                authorAccountId: _jiraAccountId,
+                //authorUsername: _jirauser,
                 description: description,
                 issueKey: entityId,
                 startDate: timeDate.toISOString().slice(0, 10),
@@ -267,6 +271,14 @@ module.exports = function(config, tempoConfig){
         }
 
         return timeEntry;
+    }
+
+    repo.GetUserAccountId = function(){
+        _jiraclient.get(_baseurl + "api/3/myself", function(data, response){
+            if(response.statusCode == 200){
+                _jiraAccountId = data.accountId
+            }
+        })
     }
 
     return repo;
